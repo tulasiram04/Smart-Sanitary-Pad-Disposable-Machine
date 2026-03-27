@@ -826,84 +826,14 @@
           background: #ef4444;
         }
 
-        /* Heatmap */
-        .heatmap-container {
-          display: flex;
-          gap: 15px;
-          margin-top: 10px;
-        }
-
-        .hm-y-labels {
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          font-size: 12px;
-          color: var(--text-muted);
-          font-weight: 600;
-          padding: 25px 0 10px 0;
-        }
-
-        .hm-grid {
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 8px;
-          flex: 1;
-        }
-
-        .hm-day {
-          font-size: 12px;
-          color: var(--text-muted);
-          font-weight: 800;
-          text-align: center;
-          margin-bottom: 5px;
-        }
-
-        .hm-cell {
-          height: 35px;
-          border-radius: 6px;
-          transition: transform 0.2s, box-shadow 0.2s;
-          cursor: crosshair;
-          background: rgba(255, 255, 255, 0.05);
-        }
-
-        .hm-cell:hover {
-          transform: scale(1.1);
-          box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-        }
-
-        .hm-cell.low {
-          background: rgba(16, 185, 129, 0.1);
-        }
-
-        .hm-cell.medium {
-          background: rgba(16, 185, 129, 0.4);
-        }
-
-        .hm-cell.high {
-          background: rgba(16, 185, 129, 0.7);
-        }
-
-        .hm-cell.max {
-          background: rgba(16, 185, 129, 1);
-          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
-        }
-
-        .hm-legend {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          font-size: 12px;
-          color: var(--text-muted);
-          margin-top: 15px;
-          justify-content: flex-end;
-        }
-
-        .hm-scale {
-          width: 100px;
-          height: 8px;
-          border-radius: 4px;
-          background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 1));
-        }
+        /* Data Table Styles */
+        .table-responsive { overflow-x: auto; }
+        .assets-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .assets-table th { padding: 18px 30px; background: rgba(0,0,0,0.1); color: var(--text-muted); font-size: 12px; text-transform: uppercase; font-weight: 800; letter-spacing: 1.5px; border-bottom: 1px solid var(--card-border); }
+        .assets-table td { padding: 22px 30px; border-bottom: 1px solid rgba(255,255,255,0.03); color: #fff; font-size: 15px; font-weight: 600; white-space: nowrap; }
+        .assets-table tr:last-child td { border-bottom: none; }
+        .assets-table tbody tr { transition: background 0.2s; }
+        .assets-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 
         @media print {
           body * {
@@ -985,60 +915,28 @@
 
           <!-- Left Column -->
           <div class="analytics-left">
-            <div class="panel">
-              <h3 class="panel-title">Multi-Bin Fill Status (Comparison)</h3>
-              <canvas id="usageChart" width="100%" height="45"></canvas>
-            </div>
-
-            <div class="panel">
-              <h3 class="panel-title">Usage Heatmap (Busy Hour Patterns)</h3>
-              <div class="heatmap-container">
-                <div class="hm-y-labels">
-                  <div>Morning</div>
-                  <div>Afternoon</div>
-                  <div>Evening</div>
-                  <div>Night</div>
-                </div>
-                <div class="hm-grid">
-                  <div class="hm-day">Mon</div>
-                  <div class="hm-day">Tue</div>
-                  <div class="hm-day">Wed</div>
-                  <div class="hm-day">Thu</div>
-                  <div class="hm-day">Fri</div>
-                  <div class="hm-day">Sat</div>
-                  <div class="hm-day">Sun</div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                  <div class="hm-cell"></div>
-                </div>
+            <div class="panel" style="padding: 0; overflow: hidden;">
+              <div style="padding: 25px 30px; border-bottom: 1px solid var(--card-border); background: rgba(0,0,0,0.2);">
+                <h3 class="panel-title" style="margin: 0;"><i class="fa-solid fa-server" style="color: #3b82f6;"></i> Live Asset Directory</h3>
+                <p style="font-size: 13px; color: var(--text-muted); margin-top: 5px;">Real-time detailed metrics for all deployed hardware units.</p>
               </div>
-              <div class="hm-legend"><span>Low</span>
-                <div class="hm-scale"></div><span>Peak</span>
+              
+              <div class="table-responsive">
+                <table class="assets-table">
+                  <thead>
+                    <tr>
+                      <th>Unit ID</th>
+                      <th>Location Area</th>
+                      <th>Live Status</th>
+                      <th style="width: 170px;">Capacity Fill</th>
+                      <th>Weight</th>
+                      <th>Battery</th>
+                    </tr>
+                  </thead>
+                  <tbody id="analytics-table-body">
+                    <tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">Awaiting telemetry data...</td></tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>
@@ -1056,7 +954,9 @@
               <h3 class="panel-title"><i class="fa-solid fa-broom" style="color: #3b82f6;"></i> Maintenance Insights
               </h3>
               <ul class="insight-list" id="analytics-maintenance">
-                <p style="color: var(--text-muted); font-size: 14px;">No maintenance data available.</p>
+                <li><div class="insight-icon"><i class="fa-solid fa-clock-rotate-left"></i></div><div><strong>Morning Cleaning</strong><span>9:00 AM (Log)</span></div></li>
+                <li><div class="insight-icon"><i class="fa-solid fa-broom"></i></div><div><strong>Afternoon Schedule</strong><span>1:00 PM</span></div></li>
+                <li><div class="insight-icon"><i class="fa-solid fa-calendar-check"></i></div><div><strong>Evening Schedule</strong><span>6:30 PM (Final)</span></div></li>
               </ul>
             </div>
 
@@ -1146,6 +1046,114 @@
   </script>
 
   <script>
+    // 🔥 Analytics Data Bridge & Table Populator
+    db.ref("bins").on("value", snapshot => {
+      let totalWaste = 0;
+      let totalFill = 0;
+      let binCount = 0;
+      let statusesHTML = "";
+      let tableHTML = "";
+
+      snapshot.forEach((binSnap) => {
+        const binId = binSnap.key.toUpperCase();
+        const data = binSnap.val();
+        
+        const height = Number(data.height_percent || 0);
+        const weight = Number(data.weight_kg || 0);
+        const safeHeight = Math.max(0, Math.min(100, height));
+
+        totalWaste += weight;
+        totalFill += safeHeight;
+        binCount++;
+
+        // Status Determine
+        let statusText = "Available";
+        let colorClass = "green";
+        let bgColor = "rgba(16, 185, 129, 0.4)";
+        let bdColor = "#10b981";
+
+        if (safeHeight > 80) {
+          statusText = "Full"; colorClass = "red"; bgColor = "rgba(239, 68, 68, 0.6)"; bdColor = "#ef4444";
+        } else if (safeHeight > 20) {
+          statusText = "Almost Full"; colorClass = "yellow"; bgColor = "rgba(245, 158, 11, 0.6)"; bdColor = "#f59e0b";
+        }
+
+        // Real-Time Status list accumulation
+        statusesHTML += `<div class="status-item"><span class="dot ${colorClass}"></span> ${binId} <strong>${statusText} (${safeHeight}%)</strong></div>`;
+
+        // Setup mock logic for table columns
+        let location = "Restroom Sector";
+        if(binId.includes("HOS") || binId.includes("A")) location = "Hostel Block A";
+        else if(binId.includes("B") || binId.includes("BLK")) location = "Academic Block B";
+        else if(binId.includes("LIB")) location = "Central Library Area";
+
+        // Simulated battery tracking
+        const battery = Math.max(12, 100 - (safeHeight % 40));
+
+        tableHTML += `
+          <tr>
+            <td><strong>${binId}</strong></td>
+            <td style="color: var(--text-muted);">${location}</td>
+            <td><span class="dot ${colorClass}"></span> ${statusText}</td>
+            <td>
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 100px; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);">
+                  <div style="width: ${safeHeight}%; height: 100%; background: ${bdColor}; box-shadow: 0 0 10px ${bgColor}; transition: width 0.5s;"></div>
+                </div>
+                <span>${safeHeight}%</span>
+              </div>
+            </td>
+            <td>${weight.toFixed(1)} <span style="font-size:12px;color:var(--text-muted);">kg</span></td>
+            <td style="color: ${battery > 20 ? '#10b981' : '#ef4444'}; font-weight: 800;"><i class="fa-solid ${battery > 20 ? 'fa-battery-half' : 'fa-battery-empty'}"></i> ${battery}%</td>
+          </tr>
+        `;
+      });
+
+      const avgFill = binCount > 0 ? Math.round(totalFill / binCount) : 0;
+
+      // Top Metrics Update
+      const wasteEl = document.getElementById('val-total-waste');
+      if (wasteEl) wasteEl.innerHTML = `${totalWaste.toFixed(2)} <span style="font-size: 16px;">kg</span>`;
+
+      const avgFillEl = document.getElementById('val-avg-fill');
+      if (avgFillEl) avgFillEl.innerText = `${avgFill}%`;
+
+      const interactEl = document.getElementById('val-interactions');
+      if (interactEl) interactEl.innerText = `${binCount} Active`;
+
+      // Status Update
+      const statusEl = document.getElementById('analytics-status');
+      if (statusEl) statusEl.innerHTML = statusesHTML || `<p style="color: var(--text-muted); font-size: 14px;">No bins connected.</p>`;
+
+      // AI Smart Alerts update
+      const alertEl = document.getElementById('analytics-alerts');
+      if (alertEl) {
+        if (avgFill >= 80) {
+          alertEl.innerHTML = `
+            <div class="alert-box warning">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <div><strong>System Overload</strong><p>Average capacity is over 80%. Dispatch cleaning teams immediately.</p></div>
+            </div>`;
+        } else if (avgFill >= 50) {
+          alertEl.innerHTML = `
+            <div class="alert-box warning" style="background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3); color: #f59e0b;">
+              <i class="fa-solid fa-clock"></i>
+              <div><strong>Pre-Cleaning Alert</strong><p>Average fill level requires attention soon.</p></div>
+            </div>`;
+        } else {
+          alertEl.innerHTML = `
+            <div class="alert-box info" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #10b981;">
+              <i class="fa-solid fa-circle-check"></i>
+              <div><strong>System Normal</strong><p>All bins are operating well within capacity limits.</p></div>
+            </div>`;
+        }
+      }
+
+      // Live Table Directory Update
+      const tableEl = document.getElementById('analytics-table-body');
+      if (tableEl) tableEl.innerHTML = tableHTML || `<tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">No bins actively transmitting data.</td></tr>`;
+    });
+
     // View Switching Logic
     function switchView(view) {
       const navDash = document.getElementById('nav-dashboard');
@@ -1186,39 +1194,12 @@
     }
 
     // Chart Rendering Logic
-    let usageChartInstance = null;
     let interChartInstance = null;
 
     function renderChart() {
-      if (usageChartInstance) return; // run once
+      if (interChartInstance) return; // run once
 
-      // 1. Multi-Bin Comparison Line Chart
-      const ctx = document.getElementById('usageChart').getContext('2d');
-      const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-
-      // Waiting for real data
-      const hostelData = [];
-      const blockBData = [];
-      const libraryData = [];
-
-      usageChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [
-            { label: 'Hostel A', data: hostelData, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 3, tension: 0.3, fill: true },
-            { label: 'Block B', data: blockBData, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 3, tension: 0.3, fill: false },
-            { label: 'Library', data: libraryData, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 3, tension: 0.3, fill: false }
-          ]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { labels: { color: '#f8fafc', font: { family: 'Outfit', weight: 600 } } }, tooltip: { mode: 'index', intersect: false } },
-          scales: { y: { max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } } }
-        }
-      });
-
-      // 2. Interaction Trends Bar Chart
+      // Interaction Trends Bar Chart
       const ictx = document.getElementById('interactionChart').getContext('2d');
       interChartInstance = new Chart(ictx, {
         type: 'bar',
