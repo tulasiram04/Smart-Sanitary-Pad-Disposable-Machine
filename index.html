@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Smart Bin – Multi Bin Dashboard</title>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary: #10b981;
+      --bg-dark: #0f172a;
+      --bg-panel: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --card-border: rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated Background Elements */
+    .bg-shape {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: -1;
+      animation: floatBg 30s infinite alternate;
+      opacity: 0.4;
+    }
+
+    .shape1 {
+      width: 500px;
+      height: 500px;
+      background: #3b82f6;
+      top: -100px;
+      left: -100px;
+    }
+
+    .shape2 {
+      width: 600px;
+      height: 600px;
+      background: #10b981;
+      bottom: -200px;
+      right: 0;
+      animation-delay: -5s;
+    }
+
+    @keyframes floatBg {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      50% {
+        transform: translate(50px, 50px) scale(1.1);
+      }
+
+      100% {
+        transform: translate(-30px, 100px) scale(0.9);
+      }
+    }
+
+    /* Sidebar Layout */
+    .dashboard-layout {
+      display: flex;
+      width: 100%;
+      z-index: 1;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(25px);
+      border-right: 1px solid var(--card-border);
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+    }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 50px;
+      padding-left: 10px;
+      text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    }
+
+    .sidebar-brand i {
+      animation: bouncePulse 3s infinite;
+    }
+
+    @keyframes bouncePulse {
+
+      0%,
+      100% {
+        transform: translateY(0) scale(1);
+      }
+
+      50% {
+        transform: translateY(-3px) scale(1.05);
+      }
+    }
+
+    .nav-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 16px 20px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, rgba(16, 185, 129, 0.15), transparent);
+      transition: width 0.4s ease;
+      z-index: 0;
+    }
+
+    .nav-link:hover::before,
+    .nav-link.active::before {
+      width: 100%;
+    }
+
+    .nav-link>* {
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: #fff;
+      transform: translateX(8px);
+      box-shadow: -5px 0px 20px rgba(16, 185, 129, 0.1);
+    }
+
+    .nav-link.active {
+      border-left: 4px solid var(--primary);
+      background: rgba(16, 185, 129, 0.05);
+    }
+
+    .nav-link:hover i,
+    .nav-link.active i {
+      color: var(--primary);
+      transform: scale(1.2);
+    }
+
+    .nav-link i {
+      transition: all 0.3s ease;
+      width: 20px;
+      text-align: center;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 16px;
+      text-align: center;
+      border: 1px solid var(--card-border);
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .status-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: var(--primary);
+      border-radius: 50%;
+      margin-right: 8px;
+      box-shadow: 0 0 10px var(--primary);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+      }
+
+      70% {
+        box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+      }
+    }
+
+    /* Main Area */
+    .main-area {
+      flex: 1;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      background: rgba(30, 41, 59, 0.5);
+      padding: 24px 35px;
+      border-radius: 20px;
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--card-border);
+      animation: slideDown 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-40px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--text-muted));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin: 0;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 8px 15px;
+      border-radius: 30px;
+      transition: background 0.3s;
+      cursor: pointer;
+    }
+
+    .user-profile:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .user-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #059669);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: #fff;
+      box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+      border: 2px solid white;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      justify-content: flex-start;
+      perspective: 1000px;
+    }
+
+    /* Dynamic JS Elements Styles (Do not conflict with JS code logic) */
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      padding: 35px 25px;
+      width: 300px;
+      border-radius: 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: fadeInUp 0.8s ease-out forwards;
+      opacity: 0;
+      transform: translateY(40px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 5px;
+      background: linear-gradient(90deg, var(--primary), #3b82f6);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    /* Staggering card animations dynamically using nth-child */
+    .card:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+
+    .card:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .card:nth-child(3) {
+      animation-delay: 0.3s;
+    }
+
+    .card:nth-child(4) {
+      animation-delay: 0.4s;
+    }
+
+    .card:nth-child(5) {
+      animation-delay: 0.5s;
+    }
+
+    .card:nth-child(6) {
+      animation-delay: 0.6s;
+    }
+
+    .card:hover {
+      transform: translateY(-15px) scale(1.03);
+      box-shadow: 0 35px 70px rgba(0, 0, 0, 0.5);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .card h3 {
+      font-size: 24px;
+      color: #fff;
+      margin-bottom: 25px;
+      letter-spacing: 1.5px;
+      font-weight: 800;
+    }
+
+    /* The Bin Graphic */
+    .tank {
+      height: 240px;
+      width: 100px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 4px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      margin: 0 auto 30px auto;
+      position: relative;
+      overflow: hidden;
+      box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7), 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Glossy reflection on the tank */
+    .tank::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 10%;
+      width: 30%;
+      height: 100%;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent);
+      pointer-events: none;
+    }
+
+    .fill {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 0%;
+      transition: height 1.5s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.8s ease;
+      border-radius: 0 0 10px 10px;
+      /* Notice: The JS provides inline background color. */
+    }
+
+    /* Liquid waves surface effect overlaying JS background color */
+    .fill::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 200%;
+      height: 25px;
+      background: radial-gradient(circle at 50% 120%, rgba(255, 255, 255, 0.3) 25%, transparent 26%),
+        radial-gradient(circle at 50% -20%, transparent 25%, rgba(255, 255, 255, 0.15) 26%);
+      background-size: 40px 100%;
+      animation: waveMove 3s infinite linear;
+      opacity: 0.8;
+      z-index: 2;
+    }
+
+    /* internal shine for 3D liquid look */
+    .fill::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: -100%;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+      animation: fillShine 4s infinite linear;
+      z-index: 1;
+    }
+
+    @keyframes waveMove {
+      0% {
+        transform: translateX(0) scaleY(1);
+      }
+
+      50% {
+        transform: translateX(20px) scaleY(1.2);
+      }
+
+      100% {
+        transform: translateX(40px) scaleY(1);
+      }
+    }
+
+    @keyframes fillShine {
+      to {
+        left: 100%;
+      }
+    }
+
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .status {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px 20px;
+      border-radius: 25px;
+      display: inline-block;
+      margin-bottom: 15px;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .weight {
+      font-size: 18px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 900px) {
+      .dashboard-layout {
+        flex-direction: column;
+      }
+
+      .sidebar {
+        width: 100%;
+        flex-direction: row;
+        border-right: none;
+        border-bottom: 1px solid var(--card-border);
+        padding: 15px 20px;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .nav-menu {
+        flex-direction: row;
+        gap: 5px;
+      }
+
+      .nav-link {
+        padding: 10px 15px;
+        font-size: 14px;
+      }
+
+      .nav-link span {
+        display: none;
+      }
+
+      .sidebar-brand {
+        margin-bottom: 0;
+        font-size: 22px;
+      }
+
+      .sidebar-footer {
+        display: none;
+      }
+
+      .container {
+        justify-content: center;
+      }
+
+      header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="bg-shape shape1"></div>
+  <div class="bg-shape shape2"></div>
+
+  <div class="dashboard-layout">
+
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <i class="fa-solid fa-leaf"></i>
+        EcoBin
+      </div>
+
+      <ul class="nav-menu">
+        <li><a class="nav-link active" id="nav-dashboard" onclick="switchView('dashboard')"><i
+              class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></a></li>
+        <li><a class="nav-link" id="nav-analytics" onclick="switchView('analytics')"><i
+              class="fa-solid fa-chart-line"></i> <span>Analytics</span></a></li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 10px; font-weight: 600;">System Status
+        </div>
+        <div
+          style="font-size: 16px; font-weight: 600; color: #fff; display: flex; align-items: center; justify-content: center;">
+          <span class="status-dot"></span> Online & Active
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header>
+        <div>
+          <div
+            style="font-size: 14px; color: var(--primary); font-weight: 800; margin-bottom: 4px; letter-spacing: 1.5px;">
+            OVERVIEW</div>
+          <h1 id="page-title">Smart Sanitary Bin Dashboard</h1>
+        </div>
+      </header>
+
+      <div id="view-dashboard">
+        <div class="container" id="binsContainer"></div>
+      </div>
+
+      <style>
+        /* Analytics Scoped CSS */
+        .metrics-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: 20px;
+          margin-bottom: 30px;
+        }
+
+        .metric-card {
+          background: var(--card-bg);
+          backdrop-filter: blur(20px);
+          border: 1px solid var(--card-border);
+          border-radius: 20px;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+          transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .metric-icon {
+          width: 50px;
+          height: 50px;
+          border-radius: 12px;
+          background: rgba(59, 130, 246, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          color: #3b82f6;
+        }
+
+        .metric-info h4 {
+          font-size: 13px;
+          color: var(--text-muted);
+          font-weight: 600;
+          text-transform: uppercase;
+          margin-bottom: 5px;
+        }
+
+        .metric-info .value {
+          font-size: 24px;
+          font-weight: 800;
+          color: #fff;
+          margin-bottom: 5px;
+        }
+
+        .trend {
+          font-size: 12px;
+          font-weight: 600;
+        }
+
+        .trend.positive {
+          color: #10b981;
+        }
+
+        .trend.neutral {
+          color: #94a3b8;
+        }
+
+        .trend.negative {
+          color: #f43f5e;
+        }
+
+        .analytics-layout {
+          display: grid;
+          grid-template-columns: 2.2fr 1fr;
+          gap: 30px;
+        }
+
+        @media(max-width: 1200px) {
+          .analytics-layout {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .panel {
+          background: var(--card-bg);
+          backdrop-filter: blur(20px);
+          border: 1px solid var(--card-border);
+          border-radius: 20px;
+          padding: 25px;
+          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+          margin-bottom: 30px;
+        }
+
+        .panel-title {
+          font-size: 18px;
+          color: #fff;
+          font-weight: 800;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+
+        /* Alerts */
+        .alert-box {
+          display: flex;
+          align-items: flex-start;
+          gap: 15px;
+          padding: 15px;
+          border-radius: 12px;
+          margin-bottom: 15px;
+        }
+
+        .alert-box.warning {
+          background: rgba(245, 158, 11, 0.1);
+          border: 1px solid rgba(245, 158, 11, 0.3);
+          color: #f59e0b;
+        }
+
+        .alert-box.info {
+          background: rgba(59, 130, 246, 0.1);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          color: #3b82f6;
+        }
+
+        .alert-box strong {
+          font-size: 15px;
+          display: block;
+          margin-bottom: 4px;
+          color: #fff;
+        }
+
+        .alert-box p {
+          font-size: 13px;
+          margin: 0;
+          color: var(--text-muted);
+          line-height: 1.4;
+        }
+
+        .alert-box i {
+          font-size: 20px;
+          margin-top: 2px;
+        }
+
+        /* Maintenance List */
+        .insight-list {
+          list-style: none;
+          padding: 0;
+          margin: 0;
+        }
+
+        .insight-list li {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          margin-bottom: 20px;
+        }
+
+        .insight-list li:last-child {
+          margin-bottom: 0;
+        }
+
+        .insight-icon {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.05);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--text-muted);
+        }
+
+        .insight-list strong {
+          display: block;
+          font-size: 14px;
+          color: #fff;
+          margin-bottom: 4px;
+        }
+
+        .insight-list span {
+          font-size: 13px;
+          color: var(--text-muted);
+          font-weight: 600;
+        }
+
+        /* Real-time Status */
+        .status-rows {
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .status-item {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 15px;
+          color: var(--text-muted);
+          font-weight: 600;
+          background: rgba(255, 255, 255, 0.02);
+          padding: 12px 15px;
+          border-radius: 10px;
+          border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .status-item strong {
+          color: #fff;
+          margin-left: auto;
+        }
+
+        .dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+          box-shadow: 0 0 10px currentColor;
+        }
+
+        .dot.green {
+          color: #10b981;
+          background: #10b981;
+        }
+
+        .dot.yellow {
+          color: #f59e0b;
+          background: #f59e0b;
+        }
+
+        .dot.red {
+          color: #ef4444;
+          background: #ef4444;
+        }
+
+        /* Heatmap */
+        .heatmap-container {
+          display: flex;
+          gap: 15px;
+          margin-top: 10px;
+        }
+
+        .hm-y-labels {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          font-size: 12px;
+          color: var(--text-muted);
+          font-weight: 600;
+          padding: 25px 0 10px 0;
+        }
+
+        .hm-grid {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 8px;
+          flex: 1;
+        }
+
+        .hm-day {
+          font-size: 12px;
+          color: var(--text-muted);
+          font-weight: 800;
+          text-align: center;
+          margin-bottom: 5px;
+        }
+
+        .hm-cell {
+          height: 35px;
+          border-radius: 6px;
+          transition: transform 0.2s, box-shadow 0.2s;
+          cursor: crosshair;
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .hm-cell:hover {
+          transform: scale(1.1);
+          box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .hm-cell.low {
+          background: rgba(16, 185, 129, 0.1);
+        }
+
+        .hm-cell.medium {
+          background: rgba(16, 185, 129, 0.4);
+        }
+
+        .hm-cell.high {
+          background: rgba(16, 185, 129, 0.7);
+        }
+
+        .hm-cell.max {
+          background: rgba(16, 185, 129, 1);
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        .hm-legend {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 12px;
+          color: var(--text-muted);
+          margin-top: 15px;
+          justify-content: flex-end;
+        }
+
+        .hm-scale {
+          width: 100px;
+          height: 8px;
+          border-radius: 4px;
+          background: linear-gradient(90deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 1));
+        }
+
+        @media print {
+          body * {
+            visibility: hidden;
+          }
+
+          #view-analytics,
+          #view-analytics * {
+            visibility: visible;
+          }
+
+          #view-analytics {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+
+          .sidebar,
+          header,
+          .bg-shape {
+            display: none !important;
+          }
+        }
+      </style>
+
+      <div id="view-analytics" class="hidden">
+
+        <!-- Analytics Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+          <h2 style="color: #fff; font-size: 28px; font-weight: 800;">Analytics Dashboard</h2>
+          <button id="export-btn" onclick="downloadPDF()"
+            style="background: var(--primary); color: #fff; border: none; padding: 12px 25px; border-radius: 12px; font-weight: 800; font-family: 'Outfit'; cursor: pointer; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); display: flex; align-items: center; gap: 10px;">
+            <i class="fa-solid fa-file-pdf"></i> Export Report
+          </button>
+        </div>
+
+        <!-- Top Metric Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-icon"><i class="fa-solid fa-trash-can"></i></div>
+            <div class="metric-info">
+              <h4>Total Waste Collected</h4>
+              <div class="value" id="val-total-waste">0 <span style="font-size: 16px;">kg</span></div>
+              <div class="trend neutral" id="trend-total-waste">--</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b;"><i
+                class="fa-solid fa-chart-column"></i></div>
+            <div class="metric-info">
+              <h4>Average Fill Level</h4>
+              <div class="value" id="val-avg-fill">0%</div>
+              <div class="trend neutral" id="trend-avg-fill">--</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(168, 85, 247, 0.2); color: #a855f7;"><i
+                class="fa-solid fa-users"></i></div>
+            <div class="metric-info">
+              <h4>Daily Interactions</h4>
+              <div class="value" id="val-interactions">0</div>
+              <div class="trend neutral" id="trend-interactions">--</div>
+            </div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-icon" style="background: rgba(16, 185, 129, 0.2); color: var(--primary);"><i
+                class="fa-solid fa-leaf"></i></div>
+            <div class="metric-info">
+              <h4>Eco Impact</h4>
+              <div class="value" id="val-eco">0%</div>
+              <div class="trend neutral" id="trend-eco">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Columns -->
+        <div class="analytics-layout">
+
+          <!-- Left Column -->
+          <div class="analytics-left">
+            <div class="panel">
+              <h3 class="panel-title">Multi-Bin Fill Status (Comparison)</h3>
+              <canvas id="usageChart" width="100%" height="45"></canvas>
+            </div>
+
+            <div class="panel">
+              <h3 class="panel-title">Usage Heatmap (Busy Hour Patterns)</h3>
+              <div class="heatmap-container">
+                <div class="hm-y-labels">
+                  <div>Morning</div>
+                  <div>Afternoon</div>
+                  <div>Evening</div>
+                  <div>Night</div>
+                </div>
+                <div class="hm-grid">
+                  <div class="hm-day">Mon</div>
+                  <div class="hm-day">Tue</div>
+                  <div class="hm-day">Wed</div>
+                  <div class="hm-day">Thu</div>
+                  <div class="hm-day">Fri</div>
+                  <div class="hm-day">Sat</div>
+                  <div class="hm-day">Sun</div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                  <div class="hm-cell"></div>
+                </div>
+              </div>
+              <div class="hm-legend"><span>Low</span>
+                <div class="hm-scale"></div><span>Peak</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column -->
+          <div class="analytics-right">
+            <div class="panel">
+              <h3 class="panel-title"><i class="fa-solid fa-brain" style="color: #a855f7;"></i> Smart Alerts</h3>
+              <div id="analytics-alerts">
+                <p style="color: var(--text-muted); font-size: 14px;">No active alerts.</p>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h3 class="panel-title"><i class="fa-solid fa-broom" style="color: #3b82f6;"></i> Maintenance Insights
+              </h3>
+              <ul class="insight-list" id="analytics-maintenance">
+                <p style="color: var(--text-muted); font-size: 14px;">No maintenance data available.</p>
+              </ul>
+            </div>
+
+            <div class="panel">
+              <h3 class="panel-title"><i class="fa-solid fa-satellite-dish" style="color: var(--primary);"></i>
+                Real-Time Status</h3>
+              <div class="status-rows" id="analytics-status">
+                <p style="color: var(--text-muted); font-size: 14px;">No bins connected.</p>
+              </div>
+            </div>
+
+            <div class="panel">
+              <h3 class="panel-title"><i class="fa-solid fa-arrow-pointer" style="color: #f59e0b;"></i> Interaction
+                Trends</h3>
+              <canvas id="interactionChart" width="100%" height="80"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+
+  <script>
+    // 🔥 Firebase config (UNCHANGED)
+    const firebaseConfig = {
+      apiKey: "AIzaSyCwUBe745r0jC-2kCdZ2TsdkSGUcvcaSig",
+      authDomain: "smart-bin-99c47.firebaseapp.com",
+      databaseURL: "https://smart-bin-99c47-default-rtdb.firebaseio.com",
+      projectId: "smart-bin-99c47",
+      storageBucket: "smart-bin-99c47.firebasestorage.app",
+      messagingSenderId: "790933685141",
+      appId: "1:790933685141:web:70e29e0db486ed37f2ac9c"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const container = document.getElementById("binsContainer");
+
+    // 🔁 Listen to ALL bins
+    db.ref("bins").on("value", snapshot => {
+      container.innerHTML = ""; // clear UI
+
+      snapshot.forEach(binSnap => {
+        const binId = binSnap.key;
+        const data = binSnap.val();
+
+        const height = Number(data.height_percent || 0);
+        const weight = Number(data.weight_kg || 0);
+        const safeHeight = Math.max(0, Math.min(100, height));
+
+        let status = "EMPTY";
+        let color = "#4caf50";
+
+        if (safeHeight > 80) {
+          status = "FULL";
+          color = "#f44336";
+        } else if (safeHeight > 20) {
+          status = "OK";
+          color = "#ffc107";
+        }
+
+        // Create card
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+        <h3>${binId.toUpperCase()}</h3>
+
+        <div class="tank">
+          <div class="fill" style="height:${safeHeight}%; background:${color};"></div>
+        </div>
+
+        <div class="status" style="color:${color}">
+          ${status}
+        </div>
+
+        <div class="weight">
+          Weight: ${weight} kg
+        </div>
+      `;
+
+        container.appendChild(card);
+      });
+    });
+  </script>
+
+  <script>
+    // View Switching Logic
+    function switchView(view) {
+      const navDash = document.getElementById('nav-dashboard');
+      const navAnal = document.getElementById('nav-analytics');
+      const viewDash = document.getElementById('view-dashboard');
+      const viewAnal = document.getElementById('view-analytics');
+      const pageTitle = document.getElementById('page-title');
+
+      if (view === 'dashboard') {
+        navDash.classList.add('active'); navAnal.classList.remove('active');
+        viewDash.classList.remove('hidden'); viewAnal.classList.add('hidden');
+        pageTitle.innerText = "Smart Sanitary Bin Dashboard";
+      } else {
+        navAnal.classList.add('active'); navDash.classList.remove('active');
+        viewAnal.classList.remove('hidden'); viewDash.classList.add('hidden');
+        pageTitle.innerText = "Advanced Usage Analytics";
+        renderChart(); // render charts
+      }
+    }
+
+    // Export PDF Logic
+    function downloadPDF() {
+      const element = document.getElementById('view-analytics');
+      const exportBtn = document.getElementById('export-btn');
+      exportBtn.style.visibility = 'hidden'; // hide button while generating PDF
+
+      const opt = {
+        margin: 0.3,
+        filename: 'Smart_Bin_Analytics_Report.pdf',
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#0f172a' },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        exportBtn.style.visibility = 'visible';
+      });
+    }
+
+    // Chart Rendering Logic
+    let usageChartInstance = null;
+    let interChartInstance = null;
+
+    function renderChart() {
+      if (usageChartInstance) return; // run once
+
+      // 1. Multi-Bin Comparison Line Chart
+      const ctx = document.getElementById('usageChart').getContext('2d');
+      const labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+      // Waiting for real data
+      const hostelData = [];
+      const blockBData = [];
+      const libraryData = [];
+
+      usageChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Hostel A', data: hostelData, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 3, tension: 0.3, fill: true },
+            { label: 'Block B', data: blockBData, borderColor: '#f59e0b', backgroundColor: 'transparent', borderWidth: 3, tension: 0.3, fill: false },
+            { label: 'Library', data: libraryData, borderColor: '#10b981', backgroundColor: 'transparent', borderWidth: 3, tension: 0.3, fill: false }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: '#f8fafc', font: { family: 'Outfit', weight: 600 } } }, tooltip: { mode: 'index', intersect: false } },
+          scales: { y: { max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } }, x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#94a3b8' } } }
+        }
+      });
+
+      // 2. Interaction Trends Bar Chart
+      const ictx = document.getElementById('interactionChart').getContext('2d');
+      interChartInstance = new Chart(ictx, {
+        type: 'bar',
+        data: {
+          labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          datasets: [{ label: 'Daily Interactions', data: [], backgroundColor: '#8b5cf6', borderRadius: 6 }]
+        },
+        options: {
+          responsive: true, plugins: { legend: { display: false } },
+          scales: { y: { display: false }, x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { size: 10 } } } }
+        }
+      });
+    }
+  </script>
+
+</body>
+
+</html>
